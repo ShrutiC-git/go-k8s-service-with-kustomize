@@ -41,6 +41,12 @@ jobs:
         token: ${{ secrets.GITOPS_REPO_TOKEN }}
         path: gitops
     
+    
+    - name: Debug Git remote
+      run: |
+        cd gitops
+        git remote -v
+
     - name: Scaffold or Update Workload
       run: |
         BASE=gitops/workloads/services/${APP_NAME}
