@@ -49,15 +49,19 @@ jobs:
 
     - name: Scaffold or Update Workload
       run: |
-        BASE=gitops/workloads/services/${APP_NAME}
+        BASE="gitops/workloads/services/${APP_NAME}"
         
-        # If the directory for the service doesn't exist, scaffold it from templates.
+        # If the directory for the service doesn't exist, scaffold it, otherwise override
         if [ ! -d "$BASE" ]; then
           echo "Scaffolding new workload for ${APP_NAME} as directory '$BASE' does not exist."
           mkdir -p $BASE
           cp -v gitops/templates/service/* "$BASE"/
         else
-          echo "Workload directory '$BASE' already exists. Ensuring contents are up to date."
+          echo "Workload directory '$BASE' already exists. Overriding with template files."
+          # Remove the existing directory and its contents
+          rm -rf "$BASE" 
+          mkdir -p $BASE
+          cp -v gitops/templates/service/* "$BASE"/
         fi
         
         # Always run sed to ensure name and port are synchronized with env vars.

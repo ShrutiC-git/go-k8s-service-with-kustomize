@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/streadway/amqp"
@@ -30,7 +31,8 @@ func getEnv(key, default_string string) string {
 }
 
 func main() {
-	dsn := fmt.Sprintf("amqp://%s:%s@%s:5672/", rabbitUser, rabbitPassword, rabbitHost)
+	password := url.QueryEscape(rabbitPassword)
+	dsn := fmt.Sprintf("amqp://%s:%s@%s:5672/", rabbitUser, password, rabbitHost)
 	conn, err := amqp.Dial(dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ. error:  %v", err)
