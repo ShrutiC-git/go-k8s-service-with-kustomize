@@ -18,7 +18,9 @@ type Publisher struct {
 // Global publisher instance
 var app Publisher
 
-var rabbitHost = getEnv("RABBIT_HOST", "rabbitmq.messaging.svc.cluster.local")
+var rabbitHost = getEnv("RABBITMQ_HOST", "rabbitmq.messaging.svc.cluster.local")
+var rabbitUser = getEnv("RABBITMQ_USER", "user")
+var rabbitPassword = getEnv("RABBITMQ_PASSWORD", "guest")
 
 func getEnv(key, default_string string) string {
 	if value, exists := os.LookupEnv(key); exists {
@@ -28,7 +30,8 @@ func getEnv(key, default_string string) string {
 }
 
 func main() {
-	conn, err := amqp.Dial("amqp://guest:guest@" + rabbitHost + ":5672/")
+	dsn := fmt.Sprintf("amqp://%s:%s@%s:5672/", rabbitUser, rabbitPassword, rabbitHost)
+	conn, err := amqp.Dial(dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ. error:  %v", err)
 	}
