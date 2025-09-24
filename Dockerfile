@@ -1,5 +1,5 @@
 # Stage 1: Build the application binary
-FROM golang:1.22 as builder
+FROM golang:1.22 AS builder
 
 WORKDIR /app
 
@@ -11,9 +11,6 @@ RUN go mod download
 
 # Copy the rest of the application source code
 COPY . .
-
-# Format, lint, and test the code
-RUN go fmt -s .
 
 # Build the Go app, creating a statically linked binary for Linux.
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o checkout-service .
