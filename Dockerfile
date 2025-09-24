@@ -7,11 +7,13 @@ WORKDIR /app
 # This leverages Docker's layer caching. Dependencies will only be
 # re-downloaded if go.mod or go.sum changes.
 COPY go.mod go.sum ./
-RUN go fmt -s .
 RUN go mod download
 
 # Copy the rest of the application source code
 COPY . .
+
+# Format, lint, and test the code
+RUN go fmt -s .
 
 # Build the Go app, creating a statically linked binary for Linux.
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o checkout-service .
