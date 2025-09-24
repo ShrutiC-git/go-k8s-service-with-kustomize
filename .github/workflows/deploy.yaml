@@ -5,15 +5,18 @@ on:
     branches: 
       - main
 
+env: 
+  env_var: ${{ vars.ENV_CONTEXT_VAR }}
+
 jobs:
   build-deploy: 
     runs-on: ubuntu-latest
     
     env: 
-      APP_NAME: checkout-service
-      APP_PORT : 8080
-      DOCKER_IMAGE: docker.io/k18sc01/checkout-service
-      GITOPS_REPO: https://github.com/ShrutiC-git/self-service-with-argo.git
+      APP_NAME: ${{ vars.APP_NAME }}
+      APP_PORT : ${{ vars.APP_PORT }}
+      DOCKER_IMAGE:  ${{ vars.DOCKER_IMAGE }}
+      GITOPS_REPO: ${{ vars.GITOPS_REPO }}
 
     
     steps: 
