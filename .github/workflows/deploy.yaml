@@ -41,33 +41,42 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         path: gitops
     
-    - name: Scaffold workload if missing
+    - name: Scaffold or Update Workload
       run: |
-        echo "--- Debug: Listing contents of gitops/templates/service ---"
-        ls -laR gitops/templates/service
-
         BASE=gitops/workloads/services/${APP_NAME}
+        
+        # If the directory for the service doesn't exist, scaffold it from templates.
         if [ ! -d "$BASE" ]; then
           echo "Scaffolding new workload for ${APP_NAME} as directory '$BASE' does not exist."
           mkdir -p $BASE
-          cp -r gitops/templates/service/* "$BASE"/
-
-          echo "--- Debug: Listing contents of new workload directory after copy ---"
-          ls -laR "$BASE"
-
-          sed -i "s#__NAME__#${APP_NAME}#g" "$BASE"/*.yaml
-          sed -i "s#__PORT__#${APP_PORT}#g" "$BASE"/*.yaml
+          cp -v gitops/templates/service/* "$BASE"/
         else
-          echo "Skipping scaffold, directory '$BASE' already exists."
+          echo "Workload directory '$BASE' already exists. Ensuring contents are up to date."
         fi
+        
+        # Always run sed to ensure name and port are synchronized with env vars.
+        echo "Updating placeholders in YAML files..."
+        sed -i "s#__NAME__#${APP_NAME}#g" "$BASE"/*.yaml
+        sed -i "s#__PORT__#${APP_PORT}#g" "$BASE"/*.yaml
+
+    - name: Install Kustomize
+      run: |
+        echo "Installing Kustomize..."
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+        sudo mv kustomize /usr/local/bin/
+        echo "Kustomize installed to $(which kustomize)"
 
     - name: Update image with Kustomize
       run: |
         KUSTOMIZE_DIR="gitops/workloads/services/${APP_NAME}"
-        echo "--- Debug: Listing contents of Kustomize directory before update ---"
-        ls -laR "$KUSTOMIZE_DIR"
-        cd "$KUSTOMIZE_DIR"
-        kustomize edit set image placeholder=${IMAGE}
+        if [ -d "$KUSTOMIZE_DIR" ]; then
+          echo "Updating image tag in $KUSTOMIZE_DIR..."
+          cd "$KUSTOMIZE_DIR"
+          kustomize edit set image placeholder=${IMAGE}
+        else
+          echo "Error: Kustomize directory '$KUSTOMIZE_DIR' not found. Skipping image update."
+          exit 1
+        fi
     
     - name: Commit and push to GitOps repo 
       run: |
