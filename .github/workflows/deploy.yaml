@@ -50,14 +50,6 @@ jobs:
           echo "Scaffolding new workload for ${APP_NAME} as directory '$BASE' does not exist."
           mkdir -p $BASE
           cp -v gitops/templates/service/* "$BASE"/
-          # Create a kustomization.yaml if it doesn't exist
-          if [ ! -f "$BASE/kustomization.yaml" ]; then
-            echo "apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - deployment.yaml
-  - service.yaml" > "$BASE/kustomization.yaml"
-          fi
         else
           echo "Workload directory '$BASE' already exists. Ensuring contents are up to date."
         fi
@@ -92,6 +84,6 @@ resources:
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git add .
-        git commit -m "Deploy ${APP_NAME} image ${IMAGE}"
+        git commit -m "Deploy ${APP_NAME} image ${IMAGE} || echo "No changes"
         git pull origin main --rebase # Pull latest changes before pushing
         git push origin main
