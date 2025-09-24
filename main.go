@@ -30,7 +30,7 @@ func getEnv(key, default_string string) string {
 func main() {
 	conn, err := amqp.Dial("amqp://guest:guest@" + rabbitHost + ":5672/")
 	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ with the error %v", err)
+		log.Fatalf("Failed to connect to RabbitMQ:  %v", err)
 	}
 	defer conn.Close()
 
