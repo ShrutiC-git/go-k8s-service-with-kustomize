@@ -84,6 +84,6 @@ jobs:
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git add .
-        git commit -m "Deploy ${APP_NAME} image ${IMAGE} || echo "No changes"
+        git commit -m "Deploy ${APP_NAME} image ${IMAGE}" || echo "No changes"
         git pull origin main --rebase # Pull latest changes before pushing
         git push origin main
