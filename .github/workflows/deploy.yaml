@@ -40,20 +40,33 @@ jobs:
         repository: ${{ env.GITOPS_REPO }}
         token: ${{ secrets.GITHUB_TOKEN }}
         path: gitops
-
+    
     - name: Scaffold workload if missing
       run: |
+        echo "--- Debug: Listing contents of gitops/templates/service ---"
+        ls -laR gitops/templates/service
+
         BASE=gitops/workloads/services/${APP_NAME}
         if [ ! -d "$BASE" ]; then
+          echo "Scaffolding new workload for ${APP_NAME} as directory '$BASE' does not exist."
           mkdir -p $BASE
           cp -r gitops/templates/service/* "$BASE"/
+
+          echo "--- Debug: Listing contents of new workload directory after copy ---"
+          ls -laR "$BASE"
+
           sed -i "s#__NAME__#${APP_NAME}#g" "$BASE"/*.yaml
           sed -i "s#__PORT__#${APP_PORT}#g" "$BASE"/*.yaml
+        else
+          echo "Skipping scaffold, directory '$BASE' already exists."
         fi
 
     - name: Update image with Kustomize
       run: |
-        cd gitops/workloads/services/${APP_NAME}
+        KUSTOMIZE_DIR="gitops/workloads/services/${APP_NAME}"
+        echo "--- Debug: Listing contents of Kustomize directory before update ---"
+        ls -laR "$KUSTOMIZE_DIR"
+        cd "$KUSTOMIZE_DIR"
         kustomize edit set image placeholder=${IMAGE}
     
     - name: Commit and push to GitOps repo 
