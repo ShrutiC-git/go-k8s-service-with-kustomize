@@ -5,12 +5,10 @@ on:
     branches: 
       - main
 
-env: 
-  env_var: ${{ vars.ENV_CONTEXT_VAR }}
-
 jobs:
   build-deploy: 
     runs-on: ubuntu-latest
+    environment: dev
     
     env: 
       APP_NAME: ${{ vars.APP_NAME }}
