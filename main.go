@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -22,6 +23,7 @@ var app Publisher
 var rabbitHost = getEnv("RABBITMQ_HOST", "rabbitmq.messaging.svc.cluster.local")
 var rabbitUser = getEnv("RABBITMQ_USER", "user")
 var rabbitPassword = getEnv("RABBITMQ_PASSWORD", "guest")
+var fraudInferenceURL = getEnv("FRAUD_INFERENCE_URL", "http://fraud-inference.services.svc.cluster.local/predict")
 
 func getEnv(key, default_string string) string {
 	if value, exists := os.LookupEnv(key); exists {
@@ -85,10 +87,17 @@ func checkoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fraud, err := getFraudDecision(amount)
+	if err != nil {
+		log.Printf("Error getting fraud decision: %v", err)
+		fraud = map[string]interface{}{"error": "fraud-inference not available"}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status": "success",
 		"event":  event,
+		"fraud":  fraud,
 	})
 
 }
@@ -111,4 +120,21 @@ func (p *Publisher) publishEvent(event map[string]interface{}) error {
 	}
 	log.Printf("Published message: %s", body)
 	return nil
+}
+
+func getFraudDecision(amount string) (map[string]interface{}, error) {
+	resp, err := http.Get(fmt.Sprintf("%s?amount=%s", fraudInferenceURL, amount))
+	if err != nil {
+		return nil, fmt.Errorf("failed to call fraud inference service: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var result map[string]interface{}
+
+	if err := json.Unmarshal(body, &result); err !=nil {
+		return nil, fmt.Errorf("failed to parse fraud inference response: %w", err)
+	}
+	return result, nil
 }
