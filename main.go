@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 
 	"github.com/streadway/amqp"
 )
@@ -70,16 +71,22 @@ func main() {
 
 func checkoutHandler(w http.ResponseWriter, r *http.Request) {
 	userId := r.URL.Query().Get("userId")
-	amount := r.URL.Query().Get("amount")
 
-	if userId == "" || amount == "" {
-		http.Error(w, "Missing userId or amount", http.StatusBadRequest)
+	amountStr := r.URL.Query().Get("amount")
+
+	if userId == "" || amountStr == "" {
+		http.Error(w, "missing parameters", http.StatusBadRequest)
+		return
+	}
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		http.Error(w, "invalid amount", http.StatusBadRequest)
 		return
 	}
 
 	event := map[string]interface{}{
-		"userId": userId,
-		"amount": amount,
+		"user_id": userId,
+		"amount":  amount,
 	}
 
 	if err := app.publishEvent(event); err != nil {
@@ -122,7 +129,7 @@ func (p *Publisher) publishEvent(event map[string]interface{}) error {
 	return nil
 }
 
-func getFraudDecision(amount string) (map[string]interface{}, error) {
+func getFraudDecision(amount float64) (map[string]interface{}, error) {
 	resp, err := http.Get(fmt.Sprintf("%s?amount=%s", fraudInferenceURL, amount))
 	if err != nil {
 		return nil, fmt.Errorf("failed to call fraud inference service: %w", err)
@@ -133,7 +140,7 @@ func getFraudDecision(amount string) (map[string]interface{}, error) {
 
 	var result map[string]interface{}
 
-	if err := json.Unmarshal(body, &result); err !=nil {
+	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, fmt.Errorf("failed to parse fraud inference response: %w", err)
 	}
 	return result, nil
