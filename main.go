@@ -23,7 +23,7 @@ var app Publisher
 var rabbitHost = getEnv("RABBITMQ_HOST", "rabbitmq.messaging.svc.cluster.local")
 var rabbitUser = getEnv("RABBITMQ_USER", "user")
 var rabbitPassword = getEnv("RABBITMQ_PASSWORD", "guest")
-var fraudInferenceURL = getEnv("FRAUD_INFERENCE_URL", "http://fraud-inference.services.svc.cluster.local/predict")
+var fraudInferenceURL = getEnv("FRAUD_INFERENCE_URL", "http://inference-service.services.svc.cluster.local/predict")
 
 func getEnv(key, default_string string) string {
 	if value, exists := os.LookupEnv(key); exists {
