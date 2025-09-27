@@ -130,18 +130,18 @@ func (p *Publisher) publishEvent(event map[string]interface{}) error {
 }
 
 func getFraudDecision(amount float64) (map[string]interface{}, error) {
-	resp, err := http.Get(fmt.Sprintf("%s?amount=%s", fraudInferenceURL, amount))
-	if err != nil {
-		return nil, fmt.Errorf("failed to call fraud inference service: %w", err)
-	}
-	defer resp.Body.Close()
+    amtStr := strconv.FormatFloat(amount, 'f', -1, 64)
+    resp, err := http.Get(fmt.Sprintf("%s?amount=%s", fraudInferenceURL, amtStr))
+    if err != nil {
+        return nil, fmt.Errorf("failed to call fraud inference service: %w", err)
+    }
+    defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+    body, _ := ioutil.ReadAll(resp.Body)
 
-	var result map[string]interface{}
-
-	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse fraud inference response: %w", err)
-	}
-	return result, nil
+    var result map[string]interface{}
+    if err := json.Unmarshal(body, &result); err != nil {
+        return nil, fmt.Errorf("failed to parse fraud inference response: %w", err)
+    }
+    return result, nil
 }
